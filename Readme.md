@@ -1,0 +1,3 @@
+## Run App
+
+``` ./start.sh ```
