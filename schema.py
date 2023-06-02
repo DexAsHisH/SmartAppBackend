@@ -51,10 +51,10 @@ class UserProfileResponse(BaseModel):
     username: str
     email: str
     
-    
 
     class Config:
        orm_mode = True             
+
 
 class Signup(BaseModel):
     username: str
@@ -72,6 +72,15 @@ class SignupResponse(BaseModel):
 
 
 class Student(BaseModel):
+    #student_id: str
+    name: str
+    roll_no: Optional[str]=None
+    section: Optional[str]=None
+    
+    class Config:
+       orm_mode = True
+   
+class StudentResponse(BaseModel):
     student_id: str
     name: str
     roll_no: Optional[str]=None
@@ -80,28 +89,33 @@ class Student(BaseModel):
     class Config:
        orm_mode = True
    
-
 class Attendence(BaseModel):
-    attendence_id: str
+    #attendence_id: str
     student_id: str
     course_id: str
     classroom_id: str
     subject_id: str
-    #date: DateTime
-    status: bool
+    #date: str
+    status: str
 
     class Config:
        orm_mode = True
-   
+ 
 
 class Subject(BaseModel):
+    #subject_id: str
+    name: str
+    
+    class Config:
+       orm_mode = True
+   
+class SubjectResponse(BaseModel):
     subject_id: str
     name: str
     
     class Config:
        orm_mode = True
    
-
 class Teacher(BaseModel):
     teacher_id: str
     name: str
@@ -113,6 +127,14 @@ class Teacher(BaseModel):
 
 
 class Course(BaseModel):
+    #course_id: str
+    name: str
+    semester: Optional[str]=None
+    
+    class Config:
+       orm_mode = True
+   
+class CourseResponse(BaseModel):
     course_id: str
     name: str
     semester: Optional[str]=None

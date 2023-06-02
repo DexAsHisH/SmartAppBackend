@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 
 
 #Schemas
-from schema import Login, Student,Attendence,Classroom,Course,Subject
+from schema import Login, Student,Attendence,Classroom,Course,Subject, SubjectResponse
 from schema import LoginResponse
 from schema import Signup
 from schema import SignupResponse
@@ -76,11 +76,8 @@ def read_root():
 def usersignup(user: Signup):
 
     user_id = uuid.uuid4();
-    name ="Ashish Dabral"
-    roll_no = "11"
-    section = "A"
     user = UsersModel(username=user.username,email=user.email,password=user.password,user_id=user_id)
-    student = StudentModel(student_id=user_id,name=name,roll_no=roll_no,section=section)
+    student = StudentModel(student_id=user_id)
 
     print("++++++++++++++++++++")
     print(user)
@@ -117,68 +114,132 @@ def userlogin(user: Login):
 
 
 
-@app.get("/students/{student_id}")
-async def get_student(student_id: str):
-        result = db.session.query(StudentModel).filter(StudentModel.student_id == student_id).first()
-        print(student_id)
+@app.post("/user_detail/", response_model=Student)
+async def create_student(student: Student):
+        result = db.session.query(UsersModel).filter(UsersModel.user_id == student.student_id).first()
+
+        
         if (result):
-            return {"message": "Student found"}
+            update_student=db.session.query(StudentModel).filter(StudentModel.student_id == student.student_id).first()
+            update_student.name=student.name
+            update_student.roll_no=student.roll_no
+            update_student.section=student.section
+            db.session.commit() 
+
+            return update_student
         else:
             return {"message": "Student not found"}
         
 
+@app.get("/students/{student_id}")
+async def get_student(student_id: str):
+        result = db.session.query(StudentModel).filter(StudentModel.student_id == student_id).first()
+        
+        if (result):
+            return {'name': result.name,'roll_no': result.roll_no,'section': result.section}
+        else:
+            return {"message": "Student not found"}
+        
+
+@app.post("/subjects/",response_model=SubjectResponse)
+async def create_subject(subject: Subject):
+     
+    subject_id = uuid.uuid4();
+    subject = SubjectModel(name=subject.name,subject_id=subject_id)
+    db.session.add(subject)
+    db.session.commit()
+    return {'name': subject.name}
+
+
 
 @app.get("/subjects/{subject_id}")
-async def get_student(subject_id: str):
+async def get_subject(subject_id: str):
         result = db.session.query(SubjectModel).filter(SubjectModel.subject_id == subject_id).first()
-        print(subject_id)
+        
         if (result):
-            return {"message": "subject found"}
+            return {'name': result.name}
         else:
             return {"message": "subject not found"}
         
 
+
+@app.post("/courses/",response_model=Course)
+async def create_course(course: Course):
+
+    course_id = uuid.uuid4();
+    course = CourseModel(name=course.name,course_id=course_id,semester=course.semester)
+    db.session.add(course)
+    db.session.commit()
+    return course
+    
+
 @app.get("/courses/{course_id}")
-async def get_student(course_id: str):
+async def get_course(course_id: str):
         result = db.session.query(CourseModel).filter(CourseModel.course_id == course_id).first()
-        print(course_id)
+        
         if (result):
             return {"message": "course found"}
         else:
             return {"message": "course not found"}
         
 
+@app.post("/classrooms/",response_model=Classroom)
+async def get_classroom(classroom: Classroom):
+        
+    classroom_id = uuid.uuid4();
+    classroom = ClassroomModel(name=classroom.name,classroom_id=classroom_id)
+    db.session.add(classroom)
+    db.session.commit()
+    return classroom
+
+
 @app.get("/classrooms/{classroom_id}")
-async def get_student(classroom_id: str):
+async def get_classroom(classroom_id: str):
         result = db.session.query(ClassroomModel).filter(ClassroomModel.classroom_id == classroom_id).first()
-        print(classroom_id)
+        
         if (result):
             return {"message": "classroom found"}
         else:
             return {"message": "classroom not found"}
         
 
-@app.put("/attendence/{attendence_id}")
-async def get_student(attendence_id: str,attendence: Attendence):
-        attend = db.session.query(AttendenceModel).filter(AttendenceModel.attendence_id == attendence_id).first()
-        print(attendence_id)
-        if (attend):
-            attendence.status=True
-            return {"message": "class attended"}
-        else:
-            return {"message": "class not attended"}
+@app.put("/attendence/",response_model=Attendence)
+async def update_attendence(attendence: Attendence):
+           
+            attendence_id = uuid.uuid4();
+            attended = AttendenceModel(student_id=attendence.student_id,attendence_id=attendence_id,subject_id=attendence.subject_id,course_id=attendence.course_id,classroom_id=attendence.classroom_id,status=attendence.status)
+            db.session.add(attended)
+            db.session.commit()
+
+            return attendence
+  
         
 
-@app.get("/attendence/{attendence_id}")
-async def get_student(attendence_id: str):
-        result = db.session.query(AttendenceModel).filter(AttendenceModel.attendence_id == attendence_id).first()
-        print(attendence_id)
+
+@app.get("/attendence/{student_id}")
+async def get_attendence(student_id: str):
+        result = db.session.query(AttendenceModel).filter(AttendenceModel.student_id == student_id).first()
+
         if (result):
-            return {"message": "Student found"}
+            return {"message": "record found"}
         else:
-            return {"message": "Student not found"}
-        
+            return {"message": "record not found"}
 
+
+@app.get("/attendance/{student_id}")
+async def get_attendance(student_id: str):
+    attendance_records = db.session.query(AttendenceModel).filter(AttendenceModel.student_id == student_id).all()
+
+    if attendance_records:
+        present_days = 0
+
+        for record in attendance_records:
+            if record.status == "present":
+                present_days += 1
+
+        return {"message": "Record found", "days_present": present_days}
+    else:
+        return {"message": "Record not found"}
 
 #subject,course,classroon,attendance->get and put,
         
